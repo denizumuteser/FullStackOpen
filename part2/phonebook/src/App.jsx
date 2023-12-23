@@ -39,6 +39,7 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [newSearch, setNewSearch] = useState('')
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(()=>{
     personService.getAll().then(response=>{
@@ -60,15 +61,37 @@ const App = () => {
         personService.update(existing.id, {name: existing.name, number:newNumber}).then(response=>{
           setPersons(persons.map(person=> person.id!==existing.id ? person : response))
           console.log("updated", existing.id)
+          //message
+          setErrorMessage(
+            `${newName} updated successfully`
+          )
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
           setNewName("")
           setNewNumber("")
+        }).catch(error =>{
+          console.log('has already been removed')
+          setErrorMessage(
+            `${newName} has already been removed from server`
+          )
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+          const newPersons = persons.filter(person=>person.id !== existing.id)
+          setPersons(newPersons)
         })
         
         return
       }
       else
       {
-        alert(`${newName} is already added to phonebook`)
+        setErrorMessage(
+          `${newName} already in phonebook`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
         return
       }
       
@@ -76,6 +99,12 @@ const App = () => {
     //else
     personService.create({name:newName, number:newNumber}).then(response=>{
       setPersons(persons.concat(response))
+      setErrorMessage(
+        `${newName} added successfully`
+      )
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
       setNewName("")
       setNewNumber("")
     }
@@ -89,6 +118,12 @@ const App = () => {
       console.log('deleted id:', event.target.value);
       const newPersons = persons.filter(person=>person.id !== parseInt(event.target.value))
       console.log(newPersons)
+      setErrorMessage(
+        `deleted successfully`
+      )
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
       setPersons(newPersons)
     })
     
@@ -119,6 +154,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <h2 style={{color:'red'}}>{errorMessage}</h2>
       <Filter onChange={handleSearchChange} value={newSearch}/>
       <h3>Add New</h3>
       <PersonForm onAdd={addNew} onChangeName={handleNameChange} onChangeNumber={handleNumberChange} name={newName} number={newNumber}/>
